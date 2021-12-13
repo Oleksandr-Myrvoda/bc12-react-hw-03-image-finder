@@ -3,41 +3,60 @@ import { createPortal } from "react-dom";
 import PropTypes from "prop-types";
 import styles from "./Modal.module.css";
 
-const modalRoot = document.querySelector("#modal-root");
+const modalRootRef = document.querySelector("#modal-root");
 
 class Modal extends Component {
   componentDidMount() {
-    window.addEventListener("keydown", this.hendleKeyDown);
+    window.addEventListener("keydown", this.onEscPress);
   }
 
   componentWillUnmount() {
-    window.removeEventListener("keydown", this.hendleKeyDown);
+    window.removeEventListener("keydown", this.onEscPress);
   }
 
-  hendleKeyDown = (event) => {
-    if (event.code === "Escape") {
+  onEscPress = (e) => {
+    if (e.code === "Escape") {
+      console.log("Escape");
       this.props.onClose();
     }
   };
 
-  handleBackdropClick = (event) => {
-    if (event.currentTarget === event.target) {
+  handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
       this.props.onClose();
     }
   };
 
   render() {
+    const { onClose, children } = this.props;
+
     return createPortal(
-      <div className={styles.overlay} onClick={this.handleBackdropClick}>
-        <img className={styles.oodal} src={this.props.largeImage} alt="" />
+      <div className={styles.backdrop} onClick={this.handleBackdropClick}>
+        <div className={styles.modal}>
+          <header className={styles.header}>
+            <button
+              type="button"
+              className={styles.closeBtn}
+              onClick={onClose}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </header>
+
+          <div className={styles.content}>{children}</div>
+        </div>
       </div>,
-      modalRoot
+      modalRootRef
     );
   }
 }
-Modal.protoTypes = {
-  largeImageURL: PropTypes.string.isRequired,
-  alt: PropTypes.string,
+
+Modal.propTypes = {
+  onClose: PropTypes.func.isRequired,
+  // icon: PropTypes.string.isRequired, //from props
+  // title: PropTypes.string.isRequired, //from props
+  children: PropTypes.node.isRequired,
 };
 
 export default Modal;

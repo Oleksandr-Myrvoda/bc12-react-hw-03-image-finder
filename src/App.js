@@ -1,5 +1,5 @@
 import { Component } from "react";
-import apiService from "./services/apiService";
+import fetchHits from "./services/apiService";
 import Modal from "./components/Modal";
 import ImageGallery from "./components/ImageGallery";
 import Spinner from "./components/Loader";
@@ -8,14 +8,23 @@ import Button from "./components/Button";
 
 import styles from "./App.module.css";
 
+const MODAL = {
+  NONE: "none",
+  OPEN: "open",
+  // EDIT: "edit",
+  // DELETE: "delete",
+};
+
 class App extends Component {
   state = {
-    isShowModal: false,
+    openedModal: MODAL.NONE,
     hits: [],
     currentPage: 1,
     searchQuery: "",
     largeImage: "",
     isLoading: false,
+    smallImage: "",
+    alt: "",
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -30,8 +39,7 @@ class App extends Component {
 
     this.setState({ isLoading: true });
 
-    apiService
-      .fetchHits(options)
+    fetchHits(options)
       .then((hits) => {
         this.setState((prevState) => ({
           hits: [...prevState.hits, ...hits],
@@ -50,6 +58,7 @@ class App extends Component {
   };
 
   handleSearch = (searchQuery) => {
+    if (this.state.searchQuery === searchQuery) return;
     this.setState({
       searchQuery: searchQuery,
       currentPage: 1,
@@ -57,19 +66,19 @@ class App extends Component {
     });
   };
 
-  toggleModal = () => {
-    this.setState(({ isShowModal }) => ({
-      isShowModal: !isShowModal,
-    }));
-  };
+  openModal = (img) =>
+    this.setState({
+      openedModal: MODAL.OPEN,
+      largeImage: img,
+    });
 
-  openModal = (img) => {
-    this.setState({ largeImage: img });
-    this.toggleModal();
-  };
+  closeModal = () =>
+    this.setState({
+      openedModal: MODAL.NONE,
+    });
 
   render() {
-    const { isShowModal, isLoading, hits } = this.state;
+    const { openedModal, isLoading, hits } = this.state;
     const shouldRenderLoadMoreButton = hits.length > 0 && !isLoading;
 
     return (
@@ -80,11 +89,11 @@ class App extends Component {
         )}
         {isLoading && <Spinner />}
         {shouldRenderLoadMoreButton && <Button onClick={this.getDataApi} />}
-        {isShowModal && (
-          <Modal
-            largeImage={this.state.largeImage}
-            onClose={this.toggleModal}
-          />
+
+        {openedModal === MODAL.OPEN && (
+          <Modal onClose={this.closeModal} largeImage={this.state.largeImage}>
+            <img src={this.state.largeImage} alt="" />
+          </Modal>
         )}
       </div>
     );
